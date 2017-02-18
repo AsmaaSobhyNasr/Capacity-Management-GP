@@ -13,6 +13,12 @@ namespace CapacityManagement
         static void Main(string[] args)
         {
             cmCell[] cellNamesArray = cmSystem.cmGetCellNames();
+            int y = 0;
+            foreach(var cell in cellNamesArray)
+            {
+                Console.WriteLine(cell.cellName + " " + cell.cellVendor);
+                y++;
+            }
             Console.WriteLine(y);
             /*
             var cellNamesFile = new ExcelQueryFactory("excelFiles/allCells.xlsx");

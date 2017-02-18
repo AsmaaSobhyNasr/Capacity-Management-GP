@@ -40,6 +40,11 @@ namespace CapacityManagement
                 {
                     cellNamesHuawei[i].cellVendor = cellVendorType.Huawei;
                 }
+                //Make Ericsson cell names all uppercase
+                for (int i = 0; i < cellNamesEricsson.Length; i++)
+                {
+                    cellNamesEricsson[i].cellName = cellNamesEricsson[i].cellName.ToUpper();
+                }
                 //Concatinate the two arrays
                 cellNames = new cmCell[cellNamesEricsson.Length + cellNamesHuawei.Length];
                 cellNamesEricsson.CopyTo(cellNames, 0);
@@ -54,11 +59,19 @@ namespace CapacityManagement
         }
         public static void cmCellsOvershootingUpdate(cmCell[] cells)
         {
+            //Read the overshooter files
+            var overShootingCellsNamesFile = new ExcelQueryFactory("excelFiles/overShooters.xlsx");
+            overShootingCellsNamesFile.ReadOnly = true;
+            overShootingCellsNamesFile.UsePersistentConnection = true;
+            var overShootingCellNamesEricsson = (from k in overShootingCellsNamesFile.Worksheet<cmCell>("ER Overshooters")
+                                                 select k).ToArray();
+            var overShootingCellNamesHuawei = (from k in overShootingCellsNamesFile.Worksheet<cmCell>("HU Overshooters")
+                                               select k).ToArray();
+            //Huawei Data Cleaning
 
-        }
-        public static void cmUpdateCells(cmCell cellNames, cmCell overShooting)
-        {
-
+            //Ericsson Data Cleaning
+            //Update the overshooting cells
+            //Add recomendation for DownTilt
         }
     }
 }
