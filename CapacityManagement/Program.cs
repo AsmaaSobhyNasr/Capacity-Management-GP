@@ -7,10 +7,14 @@ using LinqToExcel;
 
 namespace CapacityManagement
 {
+    public enum cellVendorType { Ericsson, Huawei };
     class Program
     {
         static void Main(string[] args)
         {
+            cmCell[] cellNamesArray = cmSystem.cmGetCellNames();
+            Console.WriteLine(y);
+            /*
             var cellNamesFile = new ExcelQueryFactory("excelFiles/allCells.xlsx");
             var overShootingCellsNamesFile = new ExcelQueryFactory("excelFiles/overShooters.xlsx");
 
@@ -83,6 +87,7 @@ namespace CapacityManagement
                 }
             }
             Console.WriteLine(z);
+            */
             Console.ReadLine();
 
         }
