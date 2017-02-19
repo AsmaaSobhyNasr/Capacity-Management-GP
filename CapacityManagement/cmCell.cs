@@ -40,9 +40,6 @@ namespace CapacityManagement
         }
 
         //Methods
-        public bool isCellOverShooting()
-        {
-            return this.parameters.overShooting;
-        }
+        
     }
 }

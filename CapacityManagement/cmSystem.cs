@@ -57,21 +57,108 @@ namespace CapacityManagement
             }
             return cellNames;
         }
-        public static void cmCellsOvershootingUpdate(cmCell[] cells)
+
+        /*********
+        *   Function:   cmCellsOvershootingUpdate
+        *   Parameters: cmCell array of cells to update their overshooting value and recommended down tilt value
+        *   Returns:    cmCell array of updated cells
+        *   Operation Summary:
+        *       Read overShooting xlsx file, clean data from the xlsx file and update the given array of cmCell[]
+        *********/
+        public static cmCell[] cmCellsOvershootingUpdate(cmCell[] cells)
         {
             //Read the overshooter files
             var overShootingCellsNamesFile = new ExcelQueryFactory("excelFiles/overShooters.xlsx");
             overShootingCellsNamesFile.ReadOnly = true;
             overShootingCellsNamesFile.UsePersistentConnection = true;
-            var overShootingCellNamesEricsson = (from k in overShootingCellsNamesFile.Worksheet<cmCell>("ER Overshooters")
-                                                 select k).ToArray();
-            var overShootingCellNamesHuawei = (from k in overShootingCellsNamesFile.Worksheet<cmCell>("HU Overshooters")
-                                               select k).ToArray();
-            //Huawei Data Cleaning
-
-            //Ericsson Data Cleaning
-            //Update the overshooting cells
-            //Add recomendation for DownTilt
+            overShootingCellsNamesFile.AddMapping<cmCell>(x => x.cellName, "CellName");
+            overShootingCellsNamesFile.AddMapping<cmCell>(x => x.parameters.overShooting, "IsOvershoot");
+            overShootingCellsNamesFile.AddMapping<cmCell>(x => x.recommendations.antennaDownTilt, "Down tilt");
+            try
+            {
+                //We use with noHeader to ensure it reads tables as string and to avoid guessing it to be integers instead
+                var overShootingCellNamesEricsson = (from x in overShootingCellsNamesFile.WorksheetNoHeader("ER Overshooters")
+                                                     select x).ToArray();
+                var overShootingCellNamesHuawei = (from x in overShootingCellsNamesFile.WorksheetNoHeader("HU Overshooters")
+                                                   select x).ToArray();
+                //Ericsson Data Cleaning and updating cell array
+                for (int i = 1; i < overShootingCellNamesEricsson.Length; i++)
+                {
+                    //Data Cleaning
+                    string cellName = overShootingCellNamesEricsson[i][0].ToString().ToUpper();
+                    if (cellName.IndexOf("M", StringComparison.CurrentCultureIgnoreCase) != 0)
+                    {
+                        if (!Char.IsLetter(cellName.ElementAt(0)))
+                        {
+                            string str = "";
+                            int len = cellName.Length;
+                            for (int m = len; m < 5; m++)
+                            {
+                                str = "0" + str;
+                            }
+                            cellName = "G" + str + cellName;
+                        }
+                        else
+                        {
+                            cellName = "G" + cellName;
+                        }
+                    }
+                    //Updaing cell array of Ericsson
+                    for (int m = 0; m < cells.Length; m++)
+                    {
+                        //Console.WriteLine(cells[m].cellName == cellName);
+                        if ((cells[m].cellName == cellName) && (cells[m].cellVendor == cellVendorType.Ericsson))
+                        {
+                            cells[m].parameters.overShooting = true;
+                            cells[m].recommendations.antennaDownTilt = int.Parse(overShootingCellNamesEricsson[i][4]);
+                            //Console.WriteLine(cells[m].parameters.overShooting + " " + cells[m].recommendations.antennaDownTilt);
+                            break;
+                        }
+                    }
+                }
+                //Huawei Data Cleaning
+                for (int i = 1; i < overShootingCellNamesHuawei.Length; i++)
+                {
+                    string cellName = overShootingCellNamesHuawei[i][0].ToString().ToUpper();
+                    /* Case : Founding K in First */
+                    if (cellName.IndexOf("K", StringComparison.CurrentCultureIgnoreCase) != -1)
+                    {
+                        cellName = 'G' + cellName;
+                    }
+                    /* Case : Founding Z in First */
+                    else if (cellName.IndexOf("Z", StringComparison.CurrentCultureIgnoreCase) != -1)
+                    {
+                        cellName = 'G' + cellName;
+                    }
+                    /* Case :  ckecking the length of numbers  , Adding zeros and G */
+                    else
+                    {
+                        int d = cellName.Length;
+                        while (d < 5)
+                        {
+                            cellName = '0' + cellName;
+                            d++;
+                        }
+                        cellName = 'G' + cellName;
+                    }
+                    //Updating Huawei cells with new overshooting values
+                    for (int m = 0; m < cells.Length; m++)
+                    {
+                        if ((cells[m].cellName == cellName) && (cells[m].cellVendor == cellVendorType.Huawei))
+                        {
+                            cells[m].parameters.overShooting = true;
+                            cells[m].recommendations.antennaDownTilt = int.Parse(overShootingCellNamesHuawei[i][4]);
+                            break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                //Close connection
+                overShootingCellsNamesFile.Dispose();
+            }
+            return cells;
         }
     }
 }
